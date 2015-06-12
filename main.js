@@ -45,7 +45,7 @@ function sendSubscriptionToServer(subscription) {
       }
     },
     method: 'POST',
-    contentType: 'json',
+    contentType: 'application/json',
     crossDomain: true,
     complete: function(response) {
       console.log(response);
