@@ -46,6 +46,9 @@ function sendSubscriptionToServer(subscription) {
     },
     method: 'POST',
     contentType: 'json',
+     xhrFields: {
+        withCredentials: true
+     },
     complete: function(response) {
       console.log(response);
     }
