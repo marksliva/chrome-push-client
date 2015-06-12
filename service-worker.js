@@ -3,19 +3,21 @@
 self.addEventListener('push', function(evt) {
   console.log('Received a push message', evt);
   var a;
-  self.registration.pushManager.getSubscription().then(function(subscription) {a = subscription});
-  debugger
-  var title = 'waldo';
-  var body = 'subscription id is ';
-  var icon = '/images/icon-192x192.png';
-  var tag = 'simple-push-demo-notification-tag';
+  self.registration.pushManager.getSubscription().then(function(subscription) {
+    a = subscription
+  // debugger
+    var title = 'waldo';
+    var body = 'subscription id is '+ a;
+    var icon = '/images/icon-192x192.png';
+    var tag = 'simple-push-demo-notification-tag';
 
-  evt.waitUntil(
-    self.registration.showNotification(title, {
-      body: body,
-      icon: icon,
-      tag: tag
-    })
+    evt.waitUntil(
+      self.registration.showNotification(title, {
+        body: body,
+        icon: icon,
+        tag: tag
+      })
+    });
   );
 });
 
