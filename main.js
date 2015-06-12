@@ -44,8 +44,8 @@ function sendSubscriptionToServer(subscription) {
         os: 'chrome'
       }
     },
-    type: 'POST',
-    contentType: 'application/json',
+    method: 'POST',
+    contentType: 'json',
     complete: function(response) {
       console.log(response);
     }
