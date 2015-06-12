@@ -34,7 +34,19 @@ function sendSubscriptionToServer(subscription) {
   //
   // For compatibly of Chrome 43, get the endpoint via
   // endpointWorkaround(subscription)
-  console.log('TODO: Implement sendSubscriptionToServer()');
+
+  $.ajax({
+    url: "https://public-api-uat.vibescm.com/mobile_apps/3b7a9d41-32a9-4277-af2f-94435136afcf/register",
+    data: {
+      id: subscription.subscriptionId,
+      registration_id: subscription.subscriptionId,
+      os: 'chrome'
+    },
+    method: 'POST',
+    complete: function(response) {
+      console.log(response);
+    }
+  })
 
   var mergedEndpoint = endpointWorkaround(subscription);
 

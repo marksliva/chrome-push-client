@@ -7,7 +7,7 @@ self.addEventListener('push', function(evt) {
     a = subscription;
     // debugger
     var title = 'waldo';
-    var body = 'subscription id is '+ a;
+    var body = 'subscription id is '+ a.subscriptionId;
     var icon = '/images/icon-192x192.png';
     var tag = 'simple-push-demo-notification-tag';
 
