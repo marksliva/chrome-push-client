@@ -4,8 +4,8 @@ self.addEventListener('push', function(evt) {
   console.log('Received a push message', evt);
   var a;
   self.registration.pushManager.getSubscription().then(function(subscription) {
-    a = subscription
-  // debugger
+    a = subscription;
+    // debugger
     var title = 'waldo';
     var body = 'subscription id is '+ a;
     var icon = '/images/icon-192x192.png';
@@ -17,8 +17,8 @@ self.addEventListener('push', function(evt) {
         icon: icon,
         tag: tag
       })
-    });
-  );
+    );
+  });
 });
 
 
