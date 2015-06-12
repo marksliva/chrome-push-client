@@ -46,9 +46,7 @@ function sendSubscriptionToServer(subscription) {
     },
     method: 'POST',
     contentType: 'json',
-     xhrFields: {
-        withCredentials: true
-     },
+    crossDomain: true,
     complete: function(response) {
       console.log(response);
     }
