@@ -1,30 +1,30 @@
 'use strict';
 
 self.addEventListener('push', function(evt) {
-  console.log('Received a push message', evt);
-  var a;
-  self.registration.pushManager.getSubscription().then(function(subscription) {
-    a = subscription;
-    // debugger
-      fetch('http://trustapi.uat.vibesapps.com/PushRegistration/content/show/' + a.subscriptionId + '?keep=true',
-            {
-                method: 'GET',
-                mode: 'cors'
-            }).then(function(response) {
-                var title = response.value;
-                var body = response.value;
-                var icon = '/images/icon-192x192.png';
-                var tag = 'simple-push-demo-notification-tag';
+    console.log('Received a push message', evt);
+    var a;
+    self.registration.pushManager.getSubscription().then(function(subscription) {
+        a = subscription;
+        // debugger
+        fetch('http://trustapi.uat.vibesapps.com/PushRegistration/content/show/' + a.subscriptionId + '?keep=true',
+              {
+                  method: 'GET',
+                  mode: 'cors'
+              }).then(function(response) {
+                  var title = response.value;
+                  var body = response.value;
+                  var icon = '/images/icon-192x192.png';
+                  var tag = 'simple-push-demo-notification-tag';
 
-                evt.waitUntil(
-                    self.registration.showNotification(title, {
-                        body: body,
-                        icon: icon,
-                        tag: tag
-                    });
-                );
-            });
-  });
+                  evt.waitUntil(
+                      self.registration.showNotification(title, {
+                          body: body,
+                          icon: icon,
+                          tag: tag
+                      })
+                  );
+              });
+    });
 });
 
 
