@@ -54,7 +54,8 @@ self.addEventListener('notificationclick', function(evt) {
     }
     if (clients.openWindow){
       // var url = jsonBody.content[0].url
-      return clients.openWindow("/");
+      //return clients.openWindow("/");
+      return clients.openWindow("https://marksliva.github.io/chrome-push-client/");
     }
   }));
 
