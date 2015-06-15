@@ -1,4 +1,4 @@
-'use strict';
+//'use strict';
 
 self.addEventListener('push', function(evt) {
     console.log('Received a push message', evt);
@@ -11,6 +11,7 @@ self.addEventListener('push', function(evt) {
                   method: 'GET',
                   mode: 'cors'
               }).then(function(response) {
+                  console.log(response);
                   var title = response.value;
                   var body = response.value;
                   var icon = '/images/icon-192x192.png';
