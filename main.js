@@ -37,13 +37,13 @@ function sendSubscriptionToServer(subscription) {
 
   $.ajax({
     url: "https://public-api-uat.vibescm.com/mobile_apps/3b7a9d41-32a9-4277-af2f-94435136afcf/register",
-    data: {
+    data: JSON.stringify({
       device: {
         id: subscription.subscriptionId,
         registration_id: subscription.subscriptionId,
         os: 'chrome'
       }
-    },
+    }),
     method: 'POST',
     contentType: 'application/json',
     crossDomain: true,
