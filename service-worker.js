@@ -1,16 +1,15 @@
 'use strict';
 
+// var jsonBody;
+
 self.addEventListener('push', function(evt) {
     console.log('Received a push message', evt);
-    var a;
     self.registration.pushManager.getSubscription().then(function(subscription) {
-        a = subscription;
-        // debugger
-        //fetch('http://trustapi.uat.vibesapps.com/PushRegistration/content/show/' + a.subscriptionId + '?keep=true',
-        fetch('push-content-show.json',
+        fetch('https://public-api-uat.vibescm.com/PushRegistration/content/show/' + subscription.subscriptionId + '?keep=true',
+        // fetch('push-content-show.json',
               {
                   method: 'GET',
-                  //mode: 'cors'
+                  mode: 'cors'
               })
             .then(function(response) {
                   return response.json();
@@ -19,6 +18,7 @@ self.addEventListener('push', function(evt) {
                 console.log(error.toString());
             })
             .then(function(json_body) {
+                  // jsonBody = json_body;
                   var title = json_body.content[0].title;
                   var body = json_body.content[0].body;
                   var icon = 'https://marksliva.github.io/chrome-push-client/images/icon-192x192.png';
@@ -52,8 +52,10 @@ self.addEventListener('notificationclick', function(evt) {
       if (client.url == '/' && 'focus' in client)
         return client.focus();
     }
-    if (clients.openWindow)
-      return clients.openWindow('/');
+    if (clients.openWindow){
+      // var url = jsonBody.content[0].url
+      return clients.openWindow("/");
+    }
   }));
 
 });
