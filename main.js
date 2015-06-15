@@ -50,7 +50,7 @@ function sendSubscriptionToServer(subscription) {
     complete: function(response) {
       console.log(response);
     }
-  })
+  });
 
   var mergedEndpoint = endpointWorkaround(subscription);
 
@@ -138,9 +138,6 @@ function subscribe() {
         isPushEnabled = true;
         pushButton.textContent = 'Disable Push Messages';
         pushButton.disabled = false;
-
-        window.subscription_id = subscription.subscriptionId
-        console.log(subscription);
 
         // TODO: Send the subscription subscription.endpoint
         // to your server and save it to send a push message
