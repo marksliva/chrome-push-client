@@ -6,18 +6,24 @@ self.addEventListener('push', function(evt) {
   self.registration.pushManager.getSubscription().then(function(subscription) {
     a = subscription;
     // debugger
-    var title = 'waldo';
-    var body = 'subscription id is '+ a.subscriptionId;
-    var icon = '/images/icon-192x192.png';
-    var tag = 'simple-push-demo-notification-tag';
+      fetch('http://trustapi.uat.vibesapps.com/PushRegistration/content/show/' + a.subscriptionId + '?keep=true',
+            {
+                method: 'GET',
+                mode: 'cors'
+            }).then(function(response) {
+                var title = response.value;
+                var body = response.value;
+                var icon = '/images/icon-192x192.png';
+                var tag = 'simple-push-demo-notification-tag';
 
-    evt.waitUntil(
-      self.registration.showNotification(title, {
-        body: body,
-        icon: icon,
-        tag: tag
-      })
-    );
+                evt.waitUntil(
+                    self.registration.showNotification(title, {
+                        body: body,
+                        icon: icon,
+                        tag: tag
+                    });
+                );
+            });
   });
 });
 
