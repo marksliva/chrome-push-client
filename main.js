@@ -5,6 +5,7 @@ var GCM_ENDPOINT = 'https://android.googleapis.com/gcm/send';
 
 var curlCommandDiv = document.querySelector('.js-curl-command');
 var isPushEnabled = false;
+var cookie;
 
 // This method handles the removal of subscriptionId
 // in Chrome 44 by concatenating the subscription Id
@@ -34,6 +35,63 @@ function sendSubscriptionToServer(subscription) {
   //
   // For compatibly of Chrome 43, get the endpoint via
   // endpointWorkaround(subscription)
+
+
+  if(cookie) {
+
+    $.ajax({
+      url: "https://public-api-uat.vibescm.com"+ cookie.person.uri,
+      method: 'GET',
+      contentType: 'application/json',
+      crossDomain: true,
+      headers: {
+        "Authorization": "MobileAppToken " + cookie.auth_token
+      },
+      success: function(response) {
+        $('#first-name').val(response.custom_fields.push_test_first_name);
+        $('option[value='+ response.custom_fields.vibes_timezone[0].option_key +']').attr('selected', true);
+      }
+
+    });
+  } else {
+    var customFields = {};
+    var firstName = $('input#first-name').val();
+    var timezone = $('#timezone option:selected').val();
+
+    if (firstName && timezone) {
+      customFields.push_test_first_name = firstName;
+      customFields.vibes_timezone = [{option_key: timezone}];
+    }
+    $.ajax({
+      url: "https://public-api-uat.vibescm.com/mobile_apps/3b7a9d41-32a9-4277-af2f-94435136afcf/register",
+      data: JSON.stringify({
+        device: {
+          id: subscription.subscriptionId,
+          registration_id: subscription.subscriptionId,
+          os: 'chrome'
+        },
+        person: {
+          custom_fields: customFields
+        }
+      }),
+      method: 'POST',
+      contentType: 'application/json',
+      crossDomain: true,
+      complete: function(response) {
+        document.cookie = response.responseText;
+        setCookie();
+      }
+    });
+  }
+
+  var mergedEndpoint = endpointWorkaround(subscription);
+
+  // This is just for demo purposes / an easy to test by
+  // generating the appropriate cURL command
+  showCurlCommand(mergedEndpoint);
+}
+
+function updateCustomFields(event) {
   var customFields = {};
   var firstName = $('input#first-name').val();
   var timezone = $('#timezone option:selected').val();
@@ -44,30 +102,32 @@ function sendSubscriptionToServer(subscription) {
   }
 
   $.ajax({
-    url: "https://public-api-uat.vibescm.com/mobile_apps/3b7a9d41-32a9-4277-af2f-94435136afcf/register",
-    data: JSON.stringify({
-      device: {
-        id: subscription.subscriptionId,
-        registration_id: subscription.subscriptionId,
-        os: 'chrome'
-      },
-      person: {
+      url: "https://public-api-uat.vibescm.com"+ cookie.person.uri,
+      method: 'PUT',
+      data: JSON.stringify({
+        person_key: cookie.person.id,
         custom_fields: customFields
+      }),
+      contentType: 'application/json',
+      crossDomain: true,
+      headers: {
+        "Authorization": "MobileAppToken " + cookie.auth_token
+      },
+      success: function(response) {
+        $('#update-status').html("Success! Your information has been saved")
+        $('#update').hide();
+      },
+      error: function() {
+        $('#update-status').html("Error! Your information was not saved")
       }
-    }),
-    method: 'POST',
-    contentType: 'application/json',
-    crossDomain: true,
-    complete: function(response) {
-      console.log(response);
-    }
-  });
+    });
+}
 
-  var mergedEndpoint = endpointWorkaround(subscription);
-
-  // This is just for demo purposes / an easy to test by
-  // generating the appropriate cURL command
-  showCurlCommand(mergedEndpoint);
+function showUpdateButton() {
+  if (isPushEnabled && cookie) {
+    $('#update').show();
+    $('#update-status').html("&nbsp;");
+  }
 }
 
 // NOTE: This code is only suitable for GCM endpoints,
@@ -227,8 +287,19 @@ function initialiseState() {
   });
 }
 
+function setCookie() {
+  cookie = JSON.parse(document.cookie);
+}
+
 window.addEventListener('load', function() {
+  if(document.cookie) {
+    setCookie();
+  }
   var pushButton = document.querySelector('.js-push-button');
+  $('#update').hide();
+
+  $('#update').on('click', updateCustomFields);
+
   pushButton.addEventListener('click', function() {
     if (isPushEnabled) {
       unsubscribe();
@@ -237,6 +308,13 @@ window.addEventListener('load', function() {
     }
   });
 
+  $('select').on('change', function() {
+    showUpdateButton();
+  });
+
+  $('input').on('keyup', function() {
+    showUpdateButton();
+  });
   // Check that service workers are supported, if so, progressively
   // enhance and add push messaging support, otherwise continue without it.
   if ('serviceWorker' in navigator) {
