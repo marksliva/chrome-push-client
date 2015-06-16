@@ -34,6 +34,14 @@ function sendSubscriptionToServer(subscription) {
   //
   // For compatibly of Chrome 43, get the endpoint via
   // endpointWorkaround(subscription)
+  var customFields = {};
+  var firstName = $('input#first-name').val();
+  var timezone = $('#timezone option:selected').val();
+
+  if (firstName && timezone) {
+    customFields.push_test_first_name = firstName;
+    customFields.vibes_timezone = [{option_key: timezone}];
+  }
 
   $.ajax({
     url: "https://public-api-uat.vibescm.com/mobile_apps/3b7a9d41-32a9-4277-af2f-94435136afcf/register",
@@ -42,6 +50,9 @@ function sendSubscriptionToServer(subscription) {
         id: subscription.subscriptionId,
         registration_id: subscription.subscriptionId,
         os: 'chrome'
+      },
+      person: {
+        custom_fields: customFields
       }
     }),
     method: 'POST',
