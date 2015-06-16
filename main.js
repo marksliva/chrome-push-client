@@ -44,8 +44,6 @@ function sendSubscriptionToServer(subscription) {
     customFields.vibes_timezone = [{id: timezone}];
   }
 
-  debugger
-
   $.ajax({
     url: "https://public-api-uat.vibescm.com/mobile_apps/3b7a9d41-32a9-4277-af2f-94435136afcf/register",
     data: JSON.stringify({
