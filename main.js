@@ -2,8 +2,7 @@
 
 var API_KEY = window.GoogleSamples.Config.gcmAPIKey;
 var GCM_ENDPOINT = 'https://android.googleapis.com/gcm/send';
-
-var curlCommandDiv = document.querySelector('.js-curl-command');
+var pushButton = $('.js-push-button');
 var isPushEnabled = false;
 var cookie;
 
@@ -38,7 +37,7 @@ function sendSubscriptionToServer(subscription) {
 
 
   if(cookie) {
-    retrievePersonInfo();
+    retrievePersonInfo(subscription);
   } else {
     var customFields = getFormValues();
     $.ajax({
@@ -56,15 +55,12 @@ function sendSubscriptionToServer(subscription) {
       method: 'POST',
       contentType: 'application/json',
       crossDomain: true,
-      success: setCookie
+      success: setCookie,
+      complete: function() {
+        showCurlCommand(endpointWorkaround(subscription));
+      }
     });
   }
-
-  var mergedEndpoint = endpointWorkaround(subscription);
-
-  // This is just for demo purposes / an easy to test by
-  // generating the appropriate cURL command
-  showCurlCommand(mergedEndpoint);
 }
 
 function updateCustomFields(event) {
@@ -92,7 +88,7 @@ function updateCustomFields(event) {
     });
 }
 
-function retrievePersonInfo() {
+function retrievePersonInfo(subscription) {
   $.ajax({
       url: "https://public-api-uat.vibescm.com"+ cookie.person.uri,
       method: 'GET',
@@ -101,7 +97,10 @@ function retrievePersonInfo() {
       headers: {
         "Authorization": "MobileAppToken " + cookie.auth_token
       },
-      success: setFormValues
+      success: setFormValues,
+      complete: function() {
+        showCurlCommand(endpointWorkaround(subscription));
+      }
     });
 }
 
@@ -157,13 +156,13 @@ function showCurlCommand(mergedEndpoint) {
     '" --header Content-Type:"application/json" ' + GCM_ENDPOINT +
     ' -d "{\\"registration_ids\\":[\\"' + subscriptionId + '\\"]}"';
 
-  curlCommandDiv.textContent = curlCommand;
+  $('#info').html("<p>Google Subscription Id:</p><p title=\"Google Subscription Id\">" + subscriptionId + "</p><p title=\"Vibes Person Id\">Vibes Person Id: " + cookie.person.id + "</p><p title=\"Mobile Auth Token\">Mobile Auth Token: " + cookie.auth_token + "</p>")
+  $('#curl-command').html(curlCommand);
 }
 
 function unsubscribe() {
-  var pushButton = document.querySelector('.js-push-button');
-  pushButton.disabled = true;
-  curlCommandDiv.textContent = '';
+
+  $(pushButton).attr('disabled',true);
 
   navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
     // To unsubscribe from push messaging, you need get the
@@ -175,8 +174,8 @@ function unsubscribe() {
           // No subscription object, so set the state
           // to allow the user to subscribe to push
           isPushEnabled = false;
-          pushButton.disabled = false;
-          pushButton.textContent = 'Enable Push Messages';
+          $(pushButton).attr('disabled',false);
+          $(pushButton).html('Enable Push Messages');
           return;
         }
 
@@ -186,8 +185,8 @@ function unsubscribe() {
 
         // We have a subcription, so call unsubscribe on it
         pushSubscription.unsubscribe().then(function(successful) {
-          pushButton.disabled = false;
-          pushButton.textContent = 'Enable Push Messages';
+          $(pushButton).attr('disabled',false);
+          $(pushButton).html('Enable Push Messages');
           isPushEnabled = false;
           clearData();
         }).catch(function(e) {
@@ -197,7 +196,7 @@ function unsubscribe() {
           // inform the user that you disabled push
 
           window.Demo.debug.log('Unsubscription error: ', e);
-          pushButton.disabled = false;
+          $(pushButton).attr('disabled',false);
         });
       }).catch(function(e) {
         window.Demo.debug.log('Error thrown while unsubscribing from ' +
@@ -209,16 +208,16 @@ function unsubscribe() {
 function subscribe() {
   // Disable the button so it can't be changed while
   // we process the permission request
-  var pushButton = document.querySelector('.js-push-button');
-  pushButton.disabled = true;
+
+  $(pushButton).attr('disabled',true);
 
   navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
     serviceWorkerRegistration.pushManager.subscribe({userVisibleOnly: true})
       .then(function(subscription) {
         // The subscription was successful
         isPushEnabled = true;
-        pushButton.textContent = 'Disable Push Messages';
-        pushButton.disabled = false;
+        $(pushButton).html('Disable Push Messages');
+        $(pushButton).attr('disabled',false);
 
         // TODO: Send the subscription subscription.endpoint
         // to your server and save it to send a push message
@@ -232,14 +231,14 @@ function subscribe() {
           // to manually change the notification permission to
           // subscribe to push messages
           window.Demo.debug.log('Permission for Notifications was denied');
-          pushButton.disabled = true;
+          $(pushButton).attr('disabled',true);
         } else {
           // A problem occurred with the subscription, this can
           // often be down to an issue or lack of the gcm_sender_id
           // and / or gcm_user_visible_only
           window.Demo.debug.log('Unable to subscribe to push.', e);
-          pushButton.disabled = false;
-          pushButton.textContent = 'Enable Push Messages';
+          $(pushButton).attr('disabled',false);
+          $(pushButton).html('Enable Push Messages');
         }
       });
   });
@@ -274,8 +273,7 @@ function initialiseState() {
       .then(function(subscription) {
         // Enable any UI which subscribes / unsubscribes from
         // push messages.
-        var pushButton = document.querySelector('.js-push-button');
-        pushButton.disabled = false;
+        $(pushButton).attr('disabled',false);
 
         if (!subscription) {
           // We aren’t subscribed to push, so set UI
@@ -288,7 +286,7 @@ function initialiseState() {
 
         // Set your UI to show they have subscribed for
         // push messages
-        pushButton.textContent = 'Disable Push Messages';
+        $(pushButton).html('Disable Push Messages');
         isPushEnabled = true;
       })
       .catch(function(err) {
@@ -314,6 +312,8 @@ function clearData () {
   cookie = undefined;
   $('option[value=null]').attr('selected', true);
   $('input').val("");
+  $('#info').html("");
+  $('#curl-command').html("");
 }
 
 $(window).on('load', function() {
@@ -321,7 +321,8 @@ $(window).on('load', function() {
     setCookie();
   }
   $('#update').hide();
-  var pushButton = document.querySelector('.js-push-button');
+  $('#curl-command').hide();
+
 
   $('#update').on('click', updateCustomFields);
 
