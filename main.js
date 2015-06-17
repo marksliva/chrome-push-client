@@ -38,30 +38,9 @@ function sendSubscriptionToServer(subscription) {
 
 
   if(cookie) {
-
-    $.ajax({
-      url: "https://public-api-uat.vibescm.com"+ cookie.person.uri,
-      method: 'GET',
-      contentType: 'application/json',
-      crossDomain: true,
-      headers: {
-        "Authorization": "MobileAppToken " + cookie.auth_token
-      },
-      success: function(response) {
-        $('#first-name').val(response.custom_fields.push_test_first_name);
-        $('option[value='+ response.custom_fields.vibes_timezone[0].option_key +']').attr('selected', true);
-      }
-
-    });
+    retrievePersonInfo();
   } else {
-    var customFields = {};
-    var firstName = $('input#first-name').val();
-    var timezone = $('#timezone option:selected').val();
-
-    if (firstName && timezone) {
-      customFields.push_test_first_name = firstName;
-      customFields.vibes_timezone = [{option_key: timezone}];
-    }
+    var customFields = getFormValues();
     $.ajax({
       url: "https://public-api-uat.vibescm.com/mobile_apps/3b7a9d41-32a9-4277-af2f-94435136afcf/register",
       data: JSON.stringify({
@@ -77,10 +56,7 @@ function sendSubscriptionToServer(subscription) {
       method: 'POST',
       contentType: 'application/json',
       crossDomain: true,
-      complete: function(response) {
-        document.cookie = response.responseText;
-        setCookie();
-      }
+      success: setCookie
     });
   }
 
@@ -92,14 +68,7 @@ function sendSubscriptionToServer(subscription) {
 }
 
 function updateCustomFields(event) {
-  var customFields = {};
-  var firstName = $('input#first-name').val();
-  var timezone = $('#timezone option:selected').val();
-
-  if (firstName && timezone) {
-    customFields.push_test_first_name = firstName;
-    customFields.vibes_timezone = [{option_key: timezone}];
-  }
+  var customFields = getFormValues();
 
   $.ajax({
       url: "https://public-api-uat.vibescm.com"+ cookie.person.uri,
@@ -114,12 +83,25 @@ function updateCustomFields(event) {
         "Authorization": "MobileAppToken " + cookie.auth_token
       },
       success: function(response) {
-        $('#update-status').html("Success! Your information has been saved")
+        $('#update-status').html("Success! Your information has been saved");
         $('#update').hide();
       },
       error: function() {
-        $('#update-status').html("Error! Your information was not saved")
+        $('#update-status').html("Error! Your information was not saved");
       }
+    });
+}
+
+function retrievePersonInfo() {
+  $.ajax({
+      url: "https://public-api-uat.vibescm.com"+ cookie.person.uri,
+      method: 'GET',
+      contentType: 'application/json',
+      crossDomain: true,
+      headers: {
+        "Authorization": "MobileAppToken " + cookie.auth_token
+      },
+      success: setFormValues
     });
 }
 
@@ -128,6 +110,33 @@ function showUpdateButton() {
     $('#update').show();
     $('#update-status').html("&nbsp;");
   }
+}
+
+function setFormValues(response) {
+  var firstName = response.custom_fields.push_test_first_name;
+  var timezone = response.custom_fields.vibes_timezone[0];
+  $('#first-name').val(firstName);
+  if(timezone) {
+    $('option[value='+ timezone.option_key +']').attr('selected', true);
+  }
+}
+
+function getFormValues() {
+  var fields = {};
+  var firstName = $('input#first-name').val();
+  var timezone = $('#timezone option:selected').val();
+
+  // Don't bother setting custom fields if they are not set
+  // if (firstName) {
+    fields.push_test_first_name = firstName;
+  // }
+
+  if (timezone === "null") {
+    fields.vibes_timezone = [];
+  } else {
+    fields.vibes_timezone = [{option_key: timezone}];
+  }
+  return fields;
 }
 
 // NOTE: This code is only suitable for GCM endpoints,
@@ -180,6 +189,7 @@ function unsubscribe() {
           pushButton.disabled = false;
           pushButton.textContent = 'Enable Push Messages';
           isPushEnabled = false;
+          clearData();
         }).catch(function(e) {
           // We failed to unsubscribe, this can lead to
           // an unusual state, so may be best to remove
@@ -287,20 +297,35 @@ function initialiseState() {
   });
 }
 
-function setCookie() {
-  cookie = JSON.parse(document.cookie);
+function setCookie(personData) {
+  if (personData) {
+    document.cookie = "person=" + JSON.stringify(personData) +";";
+  }
+  cookie = JSON.parse(readCookie());
 }
 
-window.addEventListener('load', function() {
+function readCookie() {
+  var personData = /person=([^;]+)/.exec(document.cookie);
+  return (personData != null) ? personData[1] : null;
+}
+
+function clearData () {
+  document.cookie = "person=null;"
+  cookie = undefined;
+  $('option[value=null]').attr('selected', true);
+  $('input').val("");
+}
+
+$(window).on('load', function() {
   if(document.cookie) {
     setCookie();
   }
-  var pushButton = document.querySelector('.js-push-button');
   $('#update').hide();
+  var pushButton = document.querySelector('.js-push-button');
 
   $('#update').on('click', updateCustomFields);
 
-  pushButton.addEventListener('click', function() {
+  $(pushButton).on('click', function() {
     if (isPushEnabled) {
       unsubscribe();
     } else {
@@ -308,13 +333,9 @@ window.addEventListener('load', function() {
     }
   });
 
-  $('select').on('change', function() {
-    showUpdateButton();
-  });
+  $('select').on('change', showUpdateButton);
+  $('input').on('keyup', showUpdateButton);
 
-  $('input').on('keyup', function() {
-    showUpdateButton();
-  });
   // Check that service workers are supported, if so, progressively
   // enhance and add push messaging support, otherwise continue without it.
   if ('serviceWorker' in navigator) {
