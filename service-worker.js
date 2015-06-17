@@ -21,13 +21,13 @@ self.addEventListener('push', function(evt) {
                   // jsonBody = json_body;
                   var title = json_body.content[0].title;
                   var body = json_body.content[0].body;
-                  var icon = 'https://marksliva.github.io/chrome-push-client/images/icon-192x192.png';
+                  //var icon = 'https://marksliva.github.io/chrome-push-client/images/icon-192x192.png';
                   var tag = 'simple-push-demo-notification-tag';
 
                   evt.waitUntil(
                       self.registration.showNotification(title, {
                           body: body,
-                          icon: icon,
+                          //icon: icon,
                           tag: tag
                       })
                   );
